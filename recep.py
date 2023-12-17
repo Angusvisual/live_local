@@ -19,20 +19,19 @@ payload_size = struct.calcsize("L")
 cv2.namedWindow('Client Video', cv2.WINDOW_NORMAL)
 cv2.resizeWindow('Client Video', 1920, 1080)
 
-def extract_dominant_colors(image_list, num_colors):
+def extract_dominant_colors(image, num_colors):
     dominant_colors_list = []
 
-    for image in image_list:
-        colors = image.reshape(-1, image.shape[-1])
-        dominant_colors = np.unique(colors, axis=0)
+    colors = image.reshape(-1, image.shape[-1])
+    dominant_colors = np.unique(colors, axis=0)
 
-        # Trier les couleurs par luminosité décroissante
-        sorted_colors = sorted(dominant_colors, key=lambda c: 0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2], reverse=True)
+    # Trier les couleurs par luminosité décroissante
+    sorted_colors = sorted(dominant_colors, key=lambda c: np.dot(c, [0.299, 0.587, 0.114]), reverse=True)
 
-        dominant_colors_list.extend(sorted_colors)
+    dominant_colors_list.extend(sorted_colors)
 
     # Supprimer les doublons
-    unique_dominant_colors = [tuple(color) for color in np.unique(dominant_colors_list, axis=0)]
+    unique_dominant_colors = np.unique(dominant_colors_list, axis=0)
 
     # Sélectionner les n premières couleurs (si disponible)
     selected_colors = unique_dominant_colors[:num_colors]
@@ -56,18 +55,19 @@ while True:
     frame_data = data[:msg_size]
     data = data[msg_size:]
     frame = pickle.loads(frame_data)
+    colors= extract_dominant_colors([frame], 150)
+
+    color_display = np.zeros((50, len(colors), 3), dtype=np.uint8)
+    for i,color in enumerate(colors):
+        color_display[:, i, :] = color
     
-    colors = frame.reshape(-1, frame.shape[-1])
-    dominant_colors = np.unique(colors, axis=0)
 
-    # Création d'une nouvelle image avec les couleurs principales aux quatre coins
-    new_frame = np.zeros_like(frame)
+    # Afficher le flux avec les couleurs principales aux quatre coins       
+    cv2.imshow('Client Video with Dominant Colors', color_display)
 
-    for i, color in enumerate(dominant_colors[:4]):
-        new_frame[:50, i * 50:(i + 1) * 50] = color  # Ajuster la taille des carrés selon vos besoins
-
-    # Afficher le flux avec les couleurs principales aux quatre coins
-    cv2.imshow('Client Video with Dominant Colors', new_frame)
+    
+    cv2.imshow('Client Video', frame)
+    # cv2.imshow('Client Video', frame)
     if cv2.waitKey(1) == 13:  # Appuyez sur Entrée pour quitter
         break
 
