@@ -20,28 +20,28 @@ cv2.namedWindow('Client Video', cv2.WINDOW_NORMAL)
 cv2.resizeWindow('Client Video', 1920, 1080)
 
 def extract_dominant_colors(image, num_colors):
-    # pixels = image.reshape(-1, 3)
-    # criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
-    # _, labels, centers = cv2.kmeans(pixels.astype(np.float32), num_colors, None, criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
-    # dominant_colors = centers.astype(np.uint8)
-    # return dominant_colors
+    border_width = 5
+    top_border = image[:border_width, :, :]
+    bottom_border = image[-border_width:, :, :]
+    left_border = image[:, :border_width, :]
+    right_border = image[:, -border_width:, :]
 
-    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    
-    # Calculer l'histogramme 2D
-    hist = cv2.calcHist([hsv], [0, 1], None, [180, 256], [0, 180, 0, 256])
-    
-    # Normaliser l'histogramme
-    hist = cv2.normalize(hist, hist).flatten()
-    
-    # Trouver les indices des couleurs majoritaires
-    colors_majoritaires_indices = np.where(hist > color_threshold)[0]
-    
-    # Convertir les indices HSV en couleurs BGR
-    colors_majoritaires_bgr = [np.array([h, s, 255]) for h in colors_majoritaires_indices]
-    
-    return colors_majoritaires_bgr
+    # Appliquer un effet de "glow" sur chaque bordure
+    top_border = cv2.GaussianBlur(top_border, (0, 0), 5)
+    bottom_border = cv2.GaussianBlur(bottom_border, (0, 0), 5)
+    left_border = cv2.GaussianBlur(left_border, (0, 0), 5)
+    right_border = cv2.GaussianBlur(right_border, (0, 0), 5)
 
+
+    cv2.imshow('top Borders', top_border)
+    cv2.imshow('bottom Borders', bottom_border)
+    cv2.imshow('left Borders', left_border)
+    cv2.imshow('right Borders', right_border)
+    
+    # Convertir les couleurs des bords en liste
+    # edge_colors = borders.reshape(-1, 3)
+    
+    # return edge_colors
 count = 0
 while True:
     while len(data) < payload_size:
@@ -63,7 +63,6 @@ while True:
     count+=1
     
     colors= extract_dominant_colors(frame, 150)
-    # print(colors)
 
     # Afficher le flux avec les couleurs principales aux quatre coins       
     # cv2.imshow('Client Video with Dominant Colors', color_display)
