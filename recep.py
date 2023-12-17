@@ -19,6 +19,26 @@ payload_size = struct.calcsize("L")
 cv2.namedWindow('Client Video', cv2.WINDOW_NORMAL)
 cv2.resizeWindow('Client Video', 1920, 1080)
 
+def extract_dominant_colors(image_list, num_colors):
+    dominant_colors_list = []
+
+    for image in image_list:
+        colors = image.reshape(-1, image.shape[-1])
+        dominant_colors = np.unique(colors, axis=0)
+
+        # Trier les couleurs par luminosité décroissante
+        sorted_colors = sorted(dominant_colors, key=lambda c: 0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2], reverse=True)
+
+        dominant_colors_list.extend(sorted_colors)
+
+    # Supprimer les doublons
+    unique_dominant_colors = [tuple(color) for color in np.unique(dominant_colors_list, axis=0)]
+
+    # Sélectionner les n premières couleurs (si disponible)
+    selected_colors = unique_dominant_colors[:num_colors]
+
+    return selected_colors
+
 while True:
     while len(data) < payload_size:
         packet = client_socket.recv(4 * 1024)
