@@ -2,6 +2,7 @@ import cv2
 import socket
 import pickle
 import struct
+import numpy as np
 
 # Configurer le socket
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -35,9 +36,18 @@ while True:
     frame_data = data[:msg_size]
     data = data[msg_size:]
     frame = pickle.loads(frame_data)
+    
+    colors = frame.reshape(-1, frame.shape[-1])
+    dominant_colors = np.unique(colors, axis=0)
 
-    # Afficher le flux de la webcam
-    cv2.imshow('Client Video', frame)
+    # Création d'une nouvelle image avec les couleurs principales aux quatre coins
+    new_frame = np.zeros_like(frame)
+
+    for i, color in enumerate(dominant_colors[:4]):
+        new_frame[:50, i * 50:(i + 1) * 50] = color  # Ajuster la taille des carrés selon vos besoins
+
+    # Afficher le flux avec les couleurs principales aux quatre coins
+    cv2.imshow('Client Video with Dominant Colors', new_frame)
     if cv2.waitKey(1) == 13:  # Appuyez sur Entrée pour quitter
         break
 
