@@ -10,7 +10,7 @@ host_ip = '192.168.1.74'
 port = 1234
 socket_address = (host_ip, port)
 
-# Se connecter au serveur
+# Se connecter au serveurn
 client_socket.connect(socket_address)
 data = b""
 payload_size = struct.calcsize("L")
@@ -27,14 +27,20 @@ def extract_dominant_colors(image, num_colors):
     # return dominant_colors
 
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    hist=cv2.calcHist([hsv],[0,1],None,[180,256],[0,180,0,256])
-    hist=cv2.normalize(hist,hist).flatten()
-    color_threshold=1
-    color_major = np.where(hist>color_threshold)[0]
-    print(color_major)
-    colors= [cv2.cvtColor(np.uint8([[color_majoritaire]]),cv2.COLOR_HSV2BGR)[0][0] for color_majoritaire in color_major]
-    print(colors)
-    return colors
+    
+    # Calculer l'histogramme 2D
+    hist = cv2.calcHist([hsv], [0, 1], None, [180, 256], [0, 180, 0, 256])
+    
+    # Normaliser l'histogramme
+    hist = cv2.normalize(hist, hist).flatten()
+    
+    # Trouver les indices des couleurs majoritaires
+    colors_majoritaires_indices = np.where(hist > color_threshold)[0]
+    
+    # Convertir les indices HSV en couleurs BGR
+    colors_majoritaires_bgr = [np.array([h, s, 255]) for h in colors_majoritaires_indices]
+    
+    return colors_majoritaires_bgr
 
 count = 0
 while True:
