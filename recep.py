@@ -20,18 +20,16 @@ cv2.namedWindow('Client Video', cv2.WINDOW_NORMAL)
 cv2.resizeWindow('Client Video', 1920, 1080)
 
 def extract_dominant_colors(image, num_colors):
-    dominant_colors_list = []
-
     colors = image.reshape(-1, image.shape[-1])
-    dominant_colors = np.unique(colors, axis=0)
 
     # Trier les couleurs par luminosité décroissante
-    sorted_colors = sorted(dominant_colors, key=lambda c: np.dot(c, [0.299, 0.587, 0.114]), reverse=True)
-
-    dominant_colors_list.extend(sorted_colors)
+    luminosity = np.dot(colors, [0.299, 0.587, 0.114])
+    sorted_indices = np.argsort(luminosity)[::-1]
+    sorted_colors = colors[sorted_indices]
 
     # Supprimer les doublons
-    unique_dominant_colors = np.unique(dominant_colors_list, axis=0)
+    _, unique_indices = np.unique(sorted_colors, axis=0, return_index=True)
+    unique_dominant_colors = sorted_colors[unique_indices]
 
     # Sélectionner les n premières couleurs (si disponible)
     selected_colors = unique_dominant_colors[:num_colors]
