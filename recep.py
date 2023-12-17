@@ -3,6 +3,7 @@ import socket
 import pickle
 import struct
 import numpy as np
+from skimage import color
 
 # Configurer le socket
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -20,11 +21,18 @@ cv2.namedWindow('Client Video', cv2.WINDOW_NORMAL)
 cv2.resizeWindow('Client Video', 1920, 1080)
 
 def extract_dominant_colors(image, num_colors):
-    colors = image.reshape(-1, image.shape[-1])
+    # Convertir l'image en mode couleur LAB pour mieux représenter la perception humaine
+    lab_image = cv2.cvtColor(image, cv2.COLOR_BGR2Lab)
+
+    # Réduire les dimensions de l'image pour accélérer le traitement
+    small_image = cv2.resize(lab_image, (100, 100))
+
+    # À présent, 'small_image' est une image de petite taille que vous pouvez utiliser pour extraire les couleurs dominantes
+    colors = small_image.reshape(-1, 3)
 
     # Trier les couleurs par luminosité décroissante
-    luminosity = np.dot(colors, [0.299, 0.587, 0.114])
-    sorted_indices = np.argsort(luminosity)[::-1]
+    luminosity = color.rgb2gray(colors)
+    sorted_indices = luminosity.argsort()[::-1]
     sorted_colors = colors[sorted_indices]
 
     # Supprimer les doublons
@@ -35,6 +43,7 @@ def extract_dominant_colors(image, num_colors):
     selected_colors = unique_dominant_colors[:num_colors]
 
     return selected_colors
+
 
 while True:
     while len(data) < payload_size:
