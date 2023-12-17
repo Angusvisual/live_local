@@ -20,13 +20,23 @@ cv2.namedWindow('Client Video', cv2.WINDOW_NORMAL)
 cv2.resizeWindow('Client Video', 1920, 1080)
 
 def extract_dominant_colors(image, num_colors):
-    pixels = image.reshape(-1, 3)
-    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
-    _, labels, centers = cv2.kmeans(pixels.astype(np.float32), num_colors, None, criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
-    dominant_colors = centers.astype(np.uint8)
-    return dominant_colors
+    # pixels = image.reshape(-1, 3)
+    # criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
+    # _, labels, centers = cv2.kmeans(pixels.astype(np.float32), num_colors, None, criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
+    # dominant_colors = centers.astype(np.uint8)
+    # return dominant_colors
 
+    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    hist=cv2.calcHist([hsv],[0,1],None,[180,256],[0,180,0,256])
+    hist=cv2.normalize(hist,hist).flatten()
+    color_threshold=1
+    color_major = np.where(hist>color_threshold)[0]
+    print(color_major)
+    colors= [cv2.cvtColor(np.uint8([[color_majoritaire]]),cv2.COLOR_HSV2BGR)[0][0] for color_majoritaire in color_major]
+    print(colors)
+    return colors
 
+count = 0
 while True:
     while len(data) < payload_size:
         packet = client_socket.recv(4 * 1024)
@@ -44,15 +54,13 @@ while True:
     frame_data = data[:msg_size]
     data = data[msg_size:]
     frame = pickle.loads(frame_data)
-    colors= extract_dominant_colors(frame, 150)
-
-    color_display = np.zeros((50, len(colors), 3), dtype=np.uint8)
-    for i,color in enumerate(colors):
-        color_display[:, i, :] = color
+    count+=1
     
+    colors= extract_dominant_colors(frame, 150)
+    # print(colors)
 
     # Afficher le flux avec les couleurs principales aux quatre coins       
-    cv2.imshow('Client Video with Dominant Colors', color_display)
+    # cv2.imshow('Client Video with Dominant Colors', color_display)
 
     
     cv2.imshow('Client Video', frame)
