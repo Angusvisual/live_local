@@ -31,8 +31,8 @@ def extract_dominant_colors(image, num_colors):
     colors = small_image.reshape(-1, 3)
 
     # Trier les couleurs par luminosité décroissante
-    luminosity = color.rgb2gray(colors)
-    sorted_indices = luminosity.argsort()[::-1]
+    luminosity = np.dot(colors, [0.299, 0.587, 0.114])
+    sorted_indices = np.argsort(luminosity)[::-1]
     sorted_colors = colors[sorted_indices]
 
     # Supprimer les doublons
