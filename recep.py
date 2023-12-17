@@ -3,7 +3,6 @@ import socket
 import pickle
 import struct
 import numpy as np
-from skimage import color
 
 # Configurer le socket
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -21,28 +20,11 @@ cv2.namedWindow('Client Video', cv2.WINDOW_NORMAL)
 cv2.resizeWindow('Client Video', 1920, 1080)
 
 def extract_dominant_colors(image, num_colors):
-    # Convertir l'image en mode couleur LAB pour mieux représenter la perception humaine
-    lab_image = cv2.cvtColor(image, cv2.COLOR_BGR2Lab)
-
-    # Réduire les dimensions de l'image pour accélérer le traitement
-    small_image = cv2.resize(lab_image, (100, 100))
-
-    # À présent, 'small_image' est une image de petite taille que vous pouvez utiliser pour extraire les couleurs dominantes
-    colors = small_image.reshape(-1, 3)
-
-    # Trier les couleurs par luminosité décroissante
-    luminosity = np.dot(colors, [0.299, 0.587, 0.114])
-    sorted_indices = np.argsort(luminosity)[::-1]
-    sorted_colors = colors[sorted_indices]
-
-    # Supprimer les doublons
-    _, unique_indices = np.unique(sorted_colors, axis=0, return_index=True)
-    unique_dominant_colors = sorted_colors[unique_indices]
-
-    # Sélectionner les n premières couleurs (si disponible)
-    selected_colors = unique_dominant_colors[:num_colors]
-
-    return selected_colors
+    pixels = image.reshape(-1, 3)
+    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
+    _, labels, centers = cv2.kmeans(pixels.astype(np.float32), num_colors, None, criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
+    dominant_colors = centers.astype(np.uint8)
+    return dominant_colors
 
 
 while True:
@@ -62,7 +44,7 @@ while True:
     frame_data = data[:msg_size]
     data = data[msg_size:]
     frame = pickle.loads(frame_data)
-    colors= extract_dominant_colors([frame], 150)
+    colors= extract_dominant_colors(frame, 150)
 
     color_display = np.zeros((50, len(colors), 3), dtype=np.uint8)
     for i,color in enumerate(colors):
